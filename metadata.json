@@ -1,0 +1,5 @@
+{
+  "name": "VisioQuant Analytics",
+  "description": "A quantitative evaluation system for AI vision models, featuring real-time metric calculation, validation gates, and historical trend analysis.",
+  "requestFramePermissions": []
+}
