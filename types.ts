@@ -1,15 +1,15 @@
-// User Schema
+
+
+// User Schema - Simplified for Local Mode
 export interface User {
   id: string;
   username: string;
-  password: string; // In a real app, this would be hashed. Storing plain for local demo.
-  createdAt: string;
+  email?: string;
 }
 
 // Data Persistence Layer Schema
 export interface EvaluationRecord {
-  id: number;           // Auto-increment integer
-  userId: string;       // Foreign key to User
+  id: number;           // Timestamp-based ID
   timestamp: string;    // ISO string
   model_name: string;   // Model version
   confidence: number;   // Model Confidence Score

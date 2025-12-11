@@ -1,13 +1,12 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { dbService } from './services/dbService';
-import { authService } from './services/authService';
 import { EvaluationRecord, InputState, CalculatedMetrics, User } from './types';
 import InputSection from './components/InputSection';
 import HistoryTable from './components/HistoryTable';
 import TrendChart from './components/TrendChart';
 import ConfirmationModal from './components/ConfirmationModal';
-import AuthScreen from './components/AuthScreen';
-import { BrainCircuit, LayoutDashboard, Database, Download, Trash, LogOut, Upload, Archive } from 'lucide-react';
+import { BrainCircuit, LayoutDashboard, Database, Download, Trash, HardDrive, Loader2, CheckCircle2, Upload, FileJson } from 'lucide-react';
 import { Language, translations } from './utils/translations';
 
 type ViewMode = 'dashboard' | 'assets';
@@ -17,63 +16,49 @@ type ModalConfig = {
   targetId?: number;
 };
 
+// Static Local User
+const LOCAL_USER: User = {
+    id: 'local_admin',
+    username: 'Local Admin'
+};
+
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
   const [records, setRecords] = useState<EvaluationRecord[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [lang, setLang] = useState<Language>('en');
   const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  
+  // File Input Ref for Restore
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State to hold data loaded from history
+  const [loadedInputData, setLoadedInputData] = useState<InputState | null>(null);
   
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({ isOpen: false, type: 'delete' });
 
   const t = translations[lang];
 
-  // Initialize: Check session
+  // Initialize: Load Data on Mount
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
+    refreshHistory();
   }, []);
 
-  // Load history when user changes
-  useEffect(() => {
-    if (user) {
-      refreshHistory();
-    } else {
-      setRecords([]);
-    }
-  }, [user]);
-
-  const refreshHistory = () => {
-    if (!user) return;
-    const data = dbService.getAll(user.id);
+  const refreshHistory = async () => {
+    setIsLoadingData(true);
+    const data = await dbService.getAll();
     setRecords(data);
+    setIsLoadingData(false);
   };
 
-  const handleLogin = (loggedInUser: User) => {
-    setUser(loggedInUser);
-  };
-
-  const handleLogout = () => {
-    authService.logout();
-    setUser(null);
-    setCurrentView('dashboard');
-  };
-
-  const handleSave = (input: InputState, metrics: CalculatedMetrics) => {
-    if (!user) return;
-
+  const handleSave = async (input: InputState, metrics: CalculatedMetrics) => {
     const gt = parseInt(input.gt_total);
     const tp = parseInt(input.tp);
     const fp = parseInt(input.fp);
     const confidence = parseFloat(input.confidence) || 0;
 
-    // Business Logic: Insert into Persistence Layer with User ID
-    dbService.insert({
-      userId: user.id,
+    const { data: newRecord, error } = await dbService.insert({
       model_name: input.model_name,
       confidence: confidence,
       scenario: input.scenario,
@@ -87,9 +72,28 @@ const App: React.FC = () => {
       far: metrics.far
     });
 
-    // Interaction Flow: Toast + Refresh
-    showToast(t.toastSaved);
-    refreshHistory();
+    if (newRecord) {
+        showToast(t.toastSaved);
+        refreshHistory();
+        setLoadedInputData(null); // Clear loaded state on save
+    } else {
+        showToast(`Error: ${error}`);
+    }
+  };
+
+  const handleLoadRecord = (record: EvaluationRecord) => {
+      setLoadedInputData({
+          model_name: record.model_name,
+          confidence: record.confidence?.toString() || '',
+          scenario: record.scenario,
+          gt_total: record.gt_total.toString(),
+          tp: record.tp.toString(),
+          fp: record.fp.toString()
+      });
+      setCurrentView('dashboard'); // Switch to dashboard if not already
+      showToast(t.toastLoaded);
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // --- Modal Logic Start ---
@@ -113,17 +117,15 @@ const App: React.FC = () => {
     setModalConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const handleConfirmAction = () => {
-    if (!user) return;
-
+  const handleConfirmAction = async () => {
     if (modalConfig.type === 'delete' && modalConfig.targetId !== undefined) {
-      const success = dbService.delete(modalConfig.targetId);
+      const success = await dbService.delete(modalConfig.targetId);
       if (success) {
         showToast(t.toastDeleted);
         refreshHistory();
       }
     } else if (modalConfig.type === 'clear') {
-      const success = dbService.clearAll(user.id);
+      const success = await dbService.clearAll();
       if (success) {
         showToast(t.toastCleared);
         refreshHistory();
@@ -134,7 +136,9 @@ const App: React.FC = () => {
 
   // --- Modal Logic End ---
 
-  // --- Export / Import Logic ---
+  // --- Export / Backup Logic ---
+  
+  // 1. Export CSV (Readable)
   const handleExportCSV = () => {
     if (records.length === 0) return;
     const headers = ['ID', 'Timestamp', 'Model', 'Confidence', 'Scenario', 'GT', 'TP', 'FP', 'FN', 'Precision', 'Recall', 'F1', 'FAR'];
@@ -148,80 +152,83 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `visioquant_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `visioquant_local_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const handleBackup = () => {
-    const jsonStr = dbService.exportBackup();
-    const blob = new Blob([jsonStr], { type: 'application/json' });
+  // 2. Backup JSON (Full DB Dump)
+  const handleBackupJSON = async () => {
+    const data = await dbService.getAll();
+    if (data.length === 0) {
+        showToast("No data to backup.");
+        return;
+    }
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `visioquant_backup_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`);
+    link.setAttribute('download', `visioquant_backup_${new Date().toISOString().slice(0,10)}.json`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     showToast(t.toastBackup);
   };
 
-  const handleRestoreClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 3. Restore JSON (Import)
+  const handleRestoreJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-        const content = event.target?.result as string;
-        if (content) {
-            const success = dbService.importBackup(content);
-            if (success) {
+    reader.onload = async (event) => {
+        try {
+            const content = event.target?.result as string;
+            const parsedData = JSON.parse(content);
+            
+            // Basic validation: must be an array
+            if (Array.isArray(parsedData)) {
+                await dbService.replaceData(parsedData);
+                refreshHistory();
                 showToast(t.toastRestored);
-                // Force logout to reload state cleanly
-                handleLogout();
             } else {
-                showToast(t.toastRestoreFailed);
+                showToast(t.toastRestoreFailed); // Uses 'warning' style if logic implemented, or error text
             }
+        } catch (error) {
+            console.error(error);
+            showToast(t.toastRestoreFailed);
         }
     };
     reader.readAsText(file);
-    // Reset input
+    // Reset input so same file can be selected again if needed
     e.target.value = '';
   };
-  // -----------------------------
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
-  // If not authenticated, show Auth Screen
-  if (!user) {
-    return (
-      <>
-        <AuthScreen onLogin={handleLogin} lang={lang} setLang={setLang} showToast={showToast} />
-        {toast && (
-        <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl shadow-emerald-900/50 flex items-center gap-3 animate-fade-in-up z-50 border border-emerald-400/20">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="font-medium text-sm">{toast}</span>
-        </div>
-      )}
-      </>
-    );
-  }
-
   // --- Layout Constants ---
   const containerClass = "w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8";
 
   return (
     <div className="min-h-screen bg-slate-950 pb-28 md:pb-20 font-sans text-slate-200">
+      {/* Hidden File Input for Restore */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleRestoreJSON} 
+        accept=".json" 
+        className="hidden" 
+      />
+
       {/* Navbar (Desktop + Logo) */}
       <nav className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className={containerClass}>
@@ -264,7 +271,12 @@ const App: React.FC = () => {
                <div className="flex items-center gap-2 sm:gap-4">
                  <div className="hidden sm:flex flex-col items-end mr-2">
                     <span className="text-xs text-slate-400">{t.welcome}</span>
-                    <span className="text-sm font-medium text-indigo-400">{user.username}</span>
+                    <span className="text-sm font-medium text-indigo-400 flex items-center gap-1">
+                        {LOCAL_USER.username} 
+                        <span title="Offline Mode">
+                            <HardDrive size={12} className="text-emerald-400" />
+                        </span>
+                    </span>
                  </div>
 
                  {/* Language Switcher */}
@@ -282,14 +294,6 @@ const App: React.FC = () => {
                       EN
                     </button>
                  </div>
-
-                 <button
-                   onClick={handleLogout}
-                   className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                   title={t.logout}
-                 >
-                    <LogOut size={18} />
-                 </button>
                </div>
             </div>
           </div>
@@ -302,18 +306,25 @@ const App: React.FC = () => {
         {currentView === 'dashboard' ? (
             <>
                 {/* Dashboard View */}
-                <InputSection onSave={handleSave} lang={lang} />
+                <InputSection onSave={handleSave} lang={lang} initialData={loadedInputData} />
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Left: Summary Table (Last 5 records) */}
                     <div className="xl:col-span-2 flex flex-col h-full min-h-[400px]">
-                        <HistoryTable 
-                            records={records.slice(0, 5)} 
-                            onDelete={initiateDelete} 
-                            lang={lang} 
-                            title={t.recentHistoryTitle}
-                            compact
-                        />
+                        {isLoadingData ? (
+                             <div className="flex-1 flex items-center justify-center bg-slate-900 rounded-2xl border border-slate-800">
+                                <Loader2 className="animate-spin text-indigo-500" size={32} />
+                             </div>
+                        ) : (
+                            <HistoryTable 
+                                records={records.slice(0, 5)} 
+                                onDelete={initiateDelete} 
+                                onLoad={handleLoadRecord}
+                                lang={lang} 
+                                title={t.recentHistoryTitle}
+                                compact
+                            />
+                        )}
                         {records.length > 5 && (
                             <div className="mt-4 text-center">
                                 <button 
@@ -340,9 +351,31 @@ const App: React.FC = () => {
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
                                 <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{t.assetsTitle}</h2>
-                                <p className="text-slate-400 text-xs md:text-sm mt-1">Manage, analyze, and export your evaluation history.</p>
+                                <p className="text-slate-400 text-xs md:text-sm mt-1">
+                                    {lang === 'zh' ? '数据仅存储在您的浏览器本地。' : 'Data is stored locally in your browser.'}
+                                </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
+                                {/* Backup (JSON) */}
+                                <button 
+                                    onClick={handleBackupJSON}
+                                    disabled={records.length === 0}
+                                    className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg border border-indigo-500/50 shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={t.btnBackup}
+                                >
+                                    <FileJson size={14} /> <span className="hidden sm:inline">{t.btnBackup}</span><span className="sm:hidden">Backup</span>
+                                </button>
+                                
+                                {/* Restore (JSON) */}
+                                <button 
+                                    onClick={triggerFileUpload}
+                                    className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg border border-slate-600 transition-all"
+                                    title={t.btnRestore}
+                                >
+                                    <Upload size={14} /> <span className="hidden sm:inline">{t.btnRestore}</span><span className="sm:hidden">Restore</span>
+                                </button>
+
+                                {/* Export (CSV) */}
                                 <button 
                                     onClick={handleExportCSV}
                                     disabled={records.length === 0}
@@ -350,6 +383,10 @@ const App: React.FC = () => {
                                 >
                                     <Download size={14} /> <span className="hidden sm:inline">{t.btnExportCsv}</span><span className="sm:hidden">CSV</span>
                                 </button>
+
+                                <div className="w-px h-6 bg-slate-800 mx-1 hidden md:block"></div>
+
+                                {/* Clear All */}
                                 <button 
                                     onClick={initiateClearAll}
                                     disabled={records.length === 0}
@@ -359,37 +396,15 @@ const App: React.FC = () => {
                                 </button>
                             </div>
                         </div>
-
-                        {/* Backup & Restore Section */}
-                        <div className="border-t border-slate-800 pt-4 mt-2">
-                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Database Tools:</span>
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                    <button
-                                        onClick={handleBackup}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-md border border-indigo-500/20 transition-all text-xs font-medium"
-                                    >
-                                        <Archive size={14} /> {t.btnBackup}
-                                    </button>
-                                    <button
-                                        onClick={handleRestoreClick}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-md border border-emerald-500/20 transition-all text-xs font-medium"
-                                    >
-                                        <Upload size={14} /> {t.btnRestore}
-                                    </button>
-                                </div>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    className="hidden" 
-                                    accept=".json" 
-                                    onChange={handleFileChange}
-                                />
-                             </div>
-                        </div>
                     </div>
                     
-                    <HistoryTable records={records} onDelete={initiateDelete} lang={lang} />
+                    {isLoadingData ? (
+                        <div className="h-64 flex items-center justify-center">
+                            <Loader2 className="animate-spin text-indigo-500" size={32} />
+                        </div>
+                    ) : (
+                        <HistoryTable records={records} onDelete={initiateDelete} onLoad={handleLoadRecord} lang={lang} />
+                    )}
                 </div>
             </>
         )}
@@ -439,10 +454,8 @@ const App: React.FC = () => {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-20 right-6 md:top-auto md:bottom-6 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl shadow-emerald-900/50 flex items-center gap-3 animate-fade-in-up z-50 border border-emerald-400/20">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+        <div className={`fixed top-20 right-6 md:top-auto md:bottom-6 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in-up z-50 border ${toast.includes('Error') || toast.includes('Failed') ? 'bg-rose-600 border-rose-400/20' : 'bg-emerald-600 border-emerald-400/20'} text-white`}>
+           {toast.includes('Error') || toast.includes('Failed') ? null : <CheckCircle2 size={18} />}
           <span className="font-medium text-sm">{toast}</span>
         </div>
       )}

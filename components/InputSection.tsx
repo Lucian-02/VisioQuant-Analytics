@@ -1,16 +1,19 @@
+
 import React, { useEffect, useState } from 'react';
 import { InputState, CalculatedMetrics, ValidationResult } from '../types';
 import { calculateMetrics, validateInput } from '../services/calcService';
 import { Save, AlertTriangle, AlertOctagon, RotateCcw } from 'lucide-react';
 import MetricCard from './MetricCard';
+import PerformanceRadar from './PerformanceRadar';
 import { Language, translations } from '../utils/translations';
 
 interface InputSectionProps {
   onSave: (data: InputState, metrics: CalculatedMetrics) => void;
   lang: Language;
+  initialData?: InputState | null; // Support loading from history
 }
 
-const initialInput: InputState = {
+const initialInputState: InputState = {
   model_name: '',
   confidence: '',
   scenario: 'Default_Env_01',
@@ -19,12 +22,19 @@ const initialInput: InputState = {
   fp: ''
 };
 
-const InputSection: React.FC<InputSectionProps> = ({ onSave, lang }) => {
-  const [form, setForm] = useState<InputState>(initialInput);
+const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }) => {
+  const [form, setForm] = useState<InputState>(initialInputState);
   const [metrics, setMetrics] = useState<CalculatedMetrics | null>(null);
   const [validation, setValidation] = useState<ValidationResult>({ isValid: true, hardError: null, softWarning: null });
   
   const t = translations[lang];
+
+  // Handle external data load
+  useEffect(() => {
+    if (initialData) {
+        setForm(initialData);
+    }
+  }, [initialData]);
 
   // Watch for changes and calculate/validate
   useEffect(() => {
@@ -36,7 +46,12 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang }) => {
     setValidation(valResult);
 
     if (valResult.isValid) {
-      setMetrics(calculateMetrics(gt, tp, fp));
+        // Only calculate if we have at least one valid input to avoid empty 0 metrics on reset
+        if (form.gt_total !== '' || form.tp !== '' || form.fp !== '') {
+             setMetrics(calculateMetrics(gt, tp, fp));
+        } else {
+             setMetrics(null);
+        }
     } else {
       setMetrics(null);
     }
@@ -51,7 +66,7 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang }) => {
       onSave(form, metrics);
       // Keep context (model, confidence, scenario), clear numbers
       setForm({ 
-          ...initialInput, 
+          ...initialInputState, 
           model_name: form.model_name, 
           confidence: form.confidence,
           scenario: form.scenario 
@@ -60,7 +75,7 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang }) => {
   };
 
   const handleReset = () => {
-    setForm(initialInput);
+    setForm(initialInputState);
   };
 
   // Helper to safely get translation for error keys
@@ -195,28 +210,36 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang }) => {
         </h2>
         
         {metrics ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 flex-1">
-                <MetricCard label={t.metricPrecision} value={metrics.precision} color="blue" subtext={t.subAntiInterference} />
-                <MetricCard label={t.metricRecall} value={metrics.recall} color="green" subtext={t.subCoverage} />
-                <MetricCard label={t.metricF1} value={metrics.f1_score} color="indigo" subtext={t.subHarmonic} />
-                <MetricCard label={t.metricFar} value={metrics.far} color="red" subtext={t.subFalseAlarm} />
-                
-                {/* Secondary Derived stats */}
-                <div className="col-span-2 md:col-span-4 grid grid-cols-3 gap-3 md:gap-4 mt-2">
-                     <div className="bg-slate-900/40 p-2 md:p-3 rounded-lg border border-slate-800 text-center flex flex-col justify-center min-h-[80px] md:min-h-[100px]">
-                        <span className="block text-slate-500 text-[10px] md:text-xs uppercase mb-1">{t.calcFn}</span>
-                        <span className="text-xl md:text-2xl font-mono text-slate-300">{metrics.fn}</span>
-                     </div>
-                     <div className="bg-slate-900/40 p-2 md:p-3 rounded-lg border border-slate-800 text-center flex flex-col justify-center min-h-[80px] md:min-h-[100px]">
-                        <span className="block text-slate-500 text-[10px] md:text-xs uppercase mb-1">{t.totalPred}</span>
-                        <span className="text-xl md:text-2xl font-mono text-slate-300">{parseInt(form.tp) + parseInt(form.fp)}</span>
-                     </div>
-                     <div className="bg-slate-900/40 p-2 md:p-3 rounded-lg border border-slate-800 text-center flex flex-col justify-center min-h-[80px] md:min-h-[100px]">
-                        <span className="block text-slate-500 text-[10px] md:text-xs uppercase mb-1">{t.successRate}</span>
-                        <span className="text-xl md:text-2xl font-mono text-emerald-400">
-                           { parseInt(form.gt_total) > 0 ? ((parseInt(form.tp) / parseInt(form.gt_total)) * 100).toFixed(1) + '%' : '0%'}
-                        </span>
-                     </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
+                {/* Metrics Cards Grid - Spans 2 cols on LG */}
+                <div className="md:col-span-2 lg:col-span-2 grid grid-cols-2 gap-3 h-full content-start">
+                    <MetricCard label={t.metricPrecision} value={metrics.precision} color="blue" subtext={t.subAntiInterference} />
+                    <MetricCard label={t.metricRecall} value={metrics.recall} color="green" subtext={t.subCoverage} />
+                    <MetricCard label={t.metricF1} value={metrics.f1_score} color="indigo" subtext={t.subHarmonic} />
+                    <MetricCard label={t.metricFar} value={metrics.far} color="red" subtext={t.subFalseAlarm} />
+                    
+                    {/* Secondary Derived stats */}
+                    <div className="col-span-2 grid grid-cols-3 gap-3 mt-1">
+                        <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center">
+                            <span className="block text-slate-500 text-[10px] uppercase mb-1">{t.calcFn}</span>
+                            <span className="text-xl font-mono text-slate-300">{metrics.fn}</span>
+                        </div>
+                        <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center">
+                            <span className="block text-slate-500 text-[10px] uppercase mb-1">{t.totalPred}</span>
+                            <span className="text-xl font-mono text-slate-300">{parseInt(form.tp) + parseInt(form.fp)}</span>
+                        </div>
+                        <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center">
+                            <span className="block text-slate-500 text-[10px] uppercase mb-1">{t.successRate}</span>
+                            <span className="text-xl font-mono text-emerald-400">
+                            { parseInt(form.gt_total) > 0 ? ((parseInt(form.tp) / parseInt(form.gt_total)) * 100).toFixed(1) + '%' : '0%'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Radar Chart - Spans 1 col */}
+                <div className="md:col-span-2 lg:col-span-1 h-full min-h-[300px]">
+                    <PerformanceRadar metrics={metrics} lang={lang} />
                 </div>
             </div>
         ) : (

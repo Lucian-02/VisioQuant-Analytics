@@ -1,20 +1,41 @@
+
 import React from 'react';
 import { EvaluationRecord } from '../types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Eye } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
 interface HistoryTableProps {
   records: EvaluationRecord[];
   onDelete: (id: number) => void;
+  onLoad?: (record: EvaluationRecord) => void;
   lang: Language;
   title?: string;
   compact?: boolean;
 }
 
-const HistoryTable: React.FC<HistoryTableProps> = ({ records, onDelete, lang, title, compact = false }) => {
+const HistoryTable: React.FC<HistoryTableProps> = ({ records, onDelete, onLoad, lang, title, compact = false }) => {
   const t = translations[lang];
   const displayTitle = title || t.historyTitle;
   const isZh = lang === 'zh';
+
+  // Helper to safely format date
+  const formatDate = (dateString: string, type: 'full' | 'short' | 'time') => {
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-'; // Return dash for invalid dates
+        
+        const locale = lang === 'zh' ? 'zh-CN' : 'en-US';
+        
+        if (type === 'full') {
+             return date.toLocaleString(locale, { month:'numeric', day:'numeric', hour:'numeric', minute:'numeric' });
+        } else if (type === 'short') {
+             return date.toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
+        }
+        return date.toLocaleTimeString();
+    } catch (e) {
+        return '-';
+    }
+  };
 
   return (
     <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex flex-col h-full">
@@ -32,26 +53,42 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ records, onDelete, lang, ti
              records.map(record => (
                 <div key={record.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4 shadow-sm relative group">
                    {/* Top Row: Model + Timestamp */}
-                   <div className="flex justify-between items-start mb-3 pr-6">
+                   <div className="flex justify-between items-start mb-3 pr-20">
                       <div className="min-w-0">
-                         <div className="font-bold text-slate-200 text-sm truncate">{record.model_name}</div>
+                         <div className="flex items-center gap-2">
+                             <div className="font-bold text-slate-200 text-sm truncate">{record.model_name}</div>
+                         </div>
                          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                            {new Date(record.timestamp).toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US', { month:'numeric', day:'numeric', hour:'numeric', minute:'numeric' })}
+                            {formatDate(record.timestamp, 'full')}
                          </div>
                       </div>
                    </div>
                    
-                   {/* Delete Button (Absolute top-right) */}
-                   <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(record.id);
-                        }}
-                        className="absolute top-3 right-3 text-slate-600 hover:text-rose-500 p-1.5 rounded-lg active:bg-slate-900 transition-colors"
-                        title={t.modalDeleteTitle}
-                      >
-                        <Trash2 size={16} />
-                   </button>
+                   {/* Action Buttons (Absolute top-right) */}
+                   <div className="absolute top-3 right-3 flex gap-2">
+                       {onLoad && (
+                           <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onLoad(record);
+                                }}
+                                className="text-slate-500 hover:text-indigo-400 p-1.5 rounded-lg active:bg-slate-900 transition-colors bg-slate-900 border border-slate-800"
+                                title={t.actionLoad}
+                            >
+                                <Eye size={16} />
+                            </button>
+                       )}
+                       <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(record.id);
+                            }}
+                            className="text-slate-500 hover:text-rose-500 p-1.5 rounded-lg active:bg-slate-900 transition-colors bg-slate-900 border border-slate-800"
+                            title={t.modalDeleteTitle}
+                        >
+                            <Trash2 size={16} />
+                       </button>
+                   </div>
 
                    {/* Key Metrics Grid */}
                    <div className="grid grid-cols-4 gap-2 mb-3">
@@ -128,7 +165,9 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ records, onDelete, lang, ti
                 records.map((record) => (
                 <tr key={record.id} className="hover:bg-slate-800/50 transition-colors group">
                     <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap font-mono text-xs text-slate-500">
-                    {new Date(record.timestamp).toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })}
+                    <div className="flex items-center gap-2">
+                        {formatDate(record.timestamp, 'short')}
+                    </div>
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap font-medium text-slate-200 text-xs md:text-sm">
                     {record.model_name}
@@ -164,16 +203,30 @@ const HistoryTable: React.FC<HistoryTableProps> = ({ records, onDelete, lang, ti
                     {(record.f1_score * 100).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 md:px-6 md:py-4 whitespace-nowrap text-right">
-                    <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(record.id);
-                        }}
-                        className="text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 transition-colors p-1.5 md:p-2 rounded-lg active:scale-95"
-                        title={t.modalDeleteTitle}
-                    >
-                        <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                        {onLoad && (
+                            <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onLoad(record);
+                                }}
+                                className="text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors p-1.5 md:p-2 rounded-lg active:scale-95"
+                                title={t.actionLoad}
+                            >
+                                <Eye size={16} />
+                            </button>
+                        )}
+                        <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(record.id);
+                            }}
+                            className="text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 transition-colors p-1.5 md:p-2 rounded-lg active:scale-95"
+                            title={t.modalDeleteTitle}
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                     </td>
                 </tr>
                 ))
