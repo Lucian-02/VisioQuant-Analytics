@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { InputState, CalculatedMetrics, ValidationResult } from '../types';
 import { calculateMetrics, validateInput } from '../services/calcService';
-import { Save, AlertOctagon, RotateCcw, Settings2, BarChart3, Layers, Zap, Activity } from 'lucide-react';
+import { Save, AlertOctagon, RotateCcw, Settings2, BarChart3, Layers, Zap, Activity, Info } from 'lucide-react';
 import MetricCard from './MetricCard';
 import PerformanceRadar from './PerformanceRadar';
 import { Language, translations } from '../utils/translations';
@@ -16,10 +16,10 @@ interface InputSectionProps {
 const initialInputState: InputState = {
   model_name: '',
   confidence: '',
-  scenario: 'Default_Env_01',
+  scenario: '',
   gt_total: '',
   tp: '',
-  fp: ''
+  pred_total: ''
 };
 
 const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }) => {
@@ -54,14 +54,14 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }
   useEffect(() => {
     const gt = parseFloat(form.gt_total) || 0;
     const tp = parseFloat(form.tp) || 0;
-    const fp = parseFloat(form.fp) || 0;
+    const pred_total = parseFloat(form.pred_total) || 0;
 
-    const valResult = validateInput(gt, tp, fp);
+    const valResult = validateInput(gt, tp, pred_total);
     setValidation(valResult);
 
     if (valResult.isValid) {
-        if (form.gt_total !== '' || form.tp !== '' || form.fp !== '') {
-             setMetrics(calculateMetrics(gt, tp, fp));
+        if (form.gt_total !== '' || form.tp !== '' || form.pred_total !== '') {
+             setMetrics(calculateMetrics(gt, tp, pred_total));
         } else {
              setMetrics(null);
         }
@@ -103,13 +103,6 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }
                 <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
                 {t.inputTitle}
             </h2>
-            <button 
-                onClick={toggleMode}
-                className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 active:scale-95 shadow-sm`}
-            >
-                <Settings2 size={12} />
-                {inputMode === 'basic' ? t.gtModeBasic : t.gtModeAdvanced}
-            </button>
         </div>
         
         <div className="space-y-4 flex-1">
@@ -120,7 +113,7 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }
                     value={form.model_name}
                     onChange={handleChange}
                     placeholder={t.modelName}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                 />
                 <div className="grid grid-cols-2 gap-3">
                     <input
@@ -129,79 +122,105 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }
                         onChange={handleChange}
                         type="number"
                         placeholder={t.modelConfidence}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none"
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white font-mono focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     />
                     <input
                         name="scenario"
                         value={form.scenario}
                         onChange={handleChange}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none"
+                        placeholder={t.scenario}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     />
                 </div>
             </div>
 
-            {/* GT Logic Area */}
-            <div className={`bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-4 min-h-[140px] flex flex-col justify-center`}>
-                {inputMode === 'basic' ? (
-                    <div className="animate-in fade-in duration-300">
-                        <label className="text-[10px] font-bold text-slate-500 mb-2 block uppercase">{t.gt}</label>
+            {/* AI Total Block (Now Prominent - Manifesto #1) */}
+            <div className="bg-slate-950/50 p-4 rounded-xl border border-blue-500/20 space-y-2 flex flex-col justify-center min-h-[100px]">
+                <label className="text-[10px] font-bold text-blue-400 mb-1 block uppercase flex items-center gap-1.5">
+                    <Layers size={12} /> {t.pred_total}
+                </label>
+                <input
+                    type="number"
+                    name="pred_total"
+                    value={form.pred_total}
+                    onChange={handleChange}
+                    placeholder="0"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-3 text-2xl font-mono text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+                <div className="flex items-center justify-between text-[10px] px-1">
+                    <span className="text-slate-500">{t.calcFp}:</span>
+                    <span className="text-rose-400 font-mono font-bold">{metrics ? metrics.fp : '-'}</span>
+                </div>
+            </div>
+
+            {/* GT & TP Logic Area (Manifesto #2 & #3) */}
+            <div className="space-y-4">
+                {/* GT Input Section */}
+                <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold text-slate-500 block uppercase flex items-center gap-1.5">
+                             <Info size={12} /> {t.gt}
+                        </label>
+                        <button 
+                            onClick={toggleMode}
+                            className={`p-1 px-2 rounded-md transition-all flex items-center gap-1.5 text-[9px] font-bold uppercase bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200 active:scale-95`}
+                        >
+                            <Settings2 size={10} />
+                            {inputMode === 'basic' ? t.gtModeBasic : t.gtModeAdvanced}
+                        </button>
+                    </div>
+
+                    {inputMode === 'basic' ? (
+                        <div className="animate-in fade-in duration-300">
+                            <input
+                                type="number"
+                                name="gt_total"
+                                value={form.gt_total}
+                                onChange={handleChange}
+                                placeholder="0"
+                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xl font-mono text-white focus:ring-2 focus:ring-slate-500 outline-none transition-all"
+                            />
+                        </div>
+                    ) : (
+                        <div className="animate-in slide-in-from-right-2 fade-in duration-300 space-y-3">
+                            <div className="grid grid-cols-3 gap-2">
+                                <input name="s" value={spatialBreakdown.s} onChange={handleSpatialChange} placeholder="Small" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                <input name="m" value={spatialBreakdown.m} onChange={handleSpatialChange} placeholder="Med" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                                <input name="l" value={spatialBreakdown.l} onChange={handleSpatialChange} placeholder="Large" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white focus:ring-2 focus:ring-indigo-500 outline-none" />
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-800 rounded-full flex overflow-hidden">
+                                <div style={{ width: getSpatWidth(spatialBreakdown.s) }} className="bg-indigo-500 h-full transition-all"></div>
+                                <div style={{ width: getSpatWidth(spatialBreakdown.m) }} className="bg-blue-500 h-full border-l border-slate-950 transition-all"></div>
+                                <div style={{ width: getSpatWidth(spatialBreakdown.l) }} className="bg-emerald-500 h-full border-l border-slate-950 transition-all"></div>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] px-1 pt-1">
+                                <span className="text-slate-500">{t.autoSum}:</span>
+                                <span className="text-white font-mono font-bold">{form.gt_total || 0}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* TP Input Section */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[10px] font-bold text-emerald-500/80 mb-1.5 block uppercase flex items-center gap-1.5">
+                            <Activity size={12} /> {t.tp}
+                        </label>
                         <input
                             type="number"
-                            name="gt_total"
-                            value={form.gt_total}
+                            name="tp"
+                            value={form.tp}
                             onChange={handleChange}
-                            placeholder="0"
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-3 text-2xl font-mono text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full bg-slate-800 border border-emerald-500/30 rounded-lg px-3 py-2 text-lg text-white font-mono focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                         />
                     </div>
-                ) : (
-                    <div className="animate-in slide-in-from-right-2 fade-in duration-300 space-y-3">
-                        <label className="text-[10px] font-bold text-indigo-400 mb-1 block uppercase flex items-center gap-1">
-                            <Layers size={12} /> {t.gtDimensionScale}
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                            <input name="s" value={spatialBreakdown.s} onChange={handleSpatialChange} placeholder="Small" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white" />
-                            <input name="m" value={spatialBreakdown.m} onChange={handleSpatialChange} placeholder="Med" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white" />
-                            <input name="l" value={spatialBreakdown.l} onChange={handleSpatialChange} placeholder="Large" className="bg-slate-900 border border-slate-700 rounded p-2 text-center text-xs font-mono text-white" />
-                        </div>
-                        <div className="h-1.5 w-full bg-slate-800 rounded-full flex overflow-hidden">
-                            <div style={{ width: getSpatWidth(spatialBreakdown.s) }} className="bg-indigo-500 h-full transition-all"></div>
-                            <div style={{ width: getSpatWidth(spatialBreakdown.m) }} className="bg-blue-500 h-full border-l border-slate-950 transition-all"></div>
-                            <div style={{ width: getSpatWidth(spatialBreakdown.l) }} className="bg-emerald-500 h-full border-l border-slate-950 transition-all"></div>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] px-1 pt-1">
-                            <span className="text-slate-500">{t.autoSum}:</span>
-                            <span className="text-white font-mono font-bold">{form.gt_total || 0}</span>
-                        </div>
+                    <div className="flex flex-col justify-end pb-2 px-1">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase">{t.calcFn}</span>
+                        <span className="text-lg font-mono text-rose-400">
+                            {metrics ? metrics.fn : '-'}
+                        </span>
                     </div>
-                )}
-            </div>
-
-            {/* Performance Inputs */}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="text-[10px] font-bold text-emerald-500/80 mb-1.5 block uppercase flex items-center gap-1.5">
-                        <Activity size={12} /> {t.tp}
-                    </label>
-                    <input
-                        type="number"
-                        name="tp"
-                        value={form.tp}
-                        onChange={handleChange}
-                        className="w-full bg-slate-800 border border-emerald-500/30 rounded-lg px-3 py-2 text-lg text-white font-mono focus:ring-2 focus:ring-emerald-500 outline-none"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] font-bold text-rose-500/80 mb-1.5 block uppercase flex items-center gap-1.5">
-                        <Zap size={12} /> {t.fp}
-                    </label>
-                    <input
-                        type="number"
-                        name="fp"
-                        value={form.fp}
-                        onChange={handleChange}
-                        className="w-full bg-slate-800 border border-rose-500/30 rounded-lg px-3 py-2 text-lg text-white font-mono focus:ring-2 focus:ring-rose-500 outline-none"
-                    />
                 </div>
             </div>
 
@@ -245,14 +264,14 @@ const InputSection: React.FC<InputSectionProps> = ({ onSave, lang, initialData }
                     <div className="col-span-2 grid grid-cols-3 gap-3 mt-1">
                         <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center">
                             <span className="block text-slate-500 text-[9px] uppercase mb-1">{t.calcFn}</span>
-                            <span className="text-xl font-mono text-slate-300">
+                            <span className="text-xl font-mono text-rose-500">
                                 {metrics.fn}
                             </span>
                         </div>
                         <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center">
                             <span className="block text-slate-500 text-[9px] uppercase mb-1">{t.totalPred}</span>
                             <span className="text-xl font-mono text-slate-300">
-                                {(parseInt(form.tp) || 0) + (parseInt(form.fp) || 0)}
+                                {form.pred_total || 0}
                             </span>
                         </div>
                         <div className="bg-slate-900/40 p-2 rounded-lg border border-slate-800 text-center flex flex-col justify-center overflow-hidden">

@@ -1,5 +1,4 @@
 
-
 // User Schema - Simplified for Local Mode
 export interface User {
   id: string;
@@ -15,11 +14,12 @@ export interface EvaluationRecord {
   confidence: number;   // Model Confidence Score
   scenario: string;     // Test environment
   
-  // Raw Data
-  gt_total: number;
-  tp: number;
-  fp: number;
-  fn: number;           // Calculated: GT - TP
+  // Raw Data (New Logic)
+  gt_total: number;     // Ground Truth
+  tp: number;           // True Positives (Valid Hits)
+  pred_total: number;   // AI Count (Total Predicted Boxes)
+  fp: number;           // Calculated: pred_total - tp
+  fn: number;           // Calculated: gt_total - tp
 
   // Core Metrics
   precision: number;
@@ -32,9 +32,9 @@ export interface InputState {
   model_name: string;
   confidence: string;
   scenario: string;
-  gt_total: string; // Keep as string for input handling, parse on validation
+  gt_total: string;
   tp: string;
-  fp: string;
+  pred_total: string;   // Formerly 'fp' input
 }
 
 export interface ValidationResult {
@@ -49,4 +49,5 @@ export interface CalculatedMetrics {
   f1_score: number;
   far: number;
   fn: number;
+  fp: number;
 }

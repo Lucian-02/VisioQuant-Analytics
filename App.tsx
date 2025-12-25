@@ -55,7 +55,7 @@ const App: React.FC = () => {
   const handleSave = async (input: InputState, metrics: CalculatedMetrics) => {
     const gt = parseInt(input.gt_total);
     const tp = parseInt(input.tp);
-    const fp = parseInt(input.fp);
+    const pred_total = parseInt(input.pred_total);
     const confidence = parseFloat(input.confidence) || 0;
 
     const { data: newRecord, error } = await dbService.insert({
@@ -64,7 +64,8 @@ const App: React.FC = () => {
       scenario: input.scenario,
       gt_total: gt,
       tp: tp,
-      fp: fp,
+      pred_total: pred_total,
+      fp: metrics.fp,
       fn: metrics.fn,
       precision: metrics.precision,
       recall: metrics.recall,
@@ -88,7 +89,7 @@ const App: React.FC = () => {
           scenario: record.scenario,
           gt_total: record.gt_total.toString(),
           tp: record.tp.toString(),
-          fp: record.fp.toString()
+          pred_total: (record.pred_total || (record.tp + record.fp)).toString() // Fallback for old records
       });
       setCurrentView('dashboard'); // Switch to dashboard if not already
       showToast(t.toastLoaded);
@@ -138,21 +139,43 @@ const App: React.FC = () => {
 
   // --- Export / Backup Logic ---
   
-  // 1. Export CSV (Readable)
+  // 1. Export CSV (Readable, Localized, and Formatted)
   const handleExportCSV = () => {
     if (records.length === 0) return;
-    const headers = ['ID', 'Timestamp', 'Model', 'Confidence', 'Scenario', 'GT', 'TP', 'FP', 'FN', 'Precision', 'Recall', 'F1', 'FAR'];
+    const h = t.csvHeaders;
+    const headers = [
+      h.id, h.timestamp, h.model, h.confidence, h.scenario, h.gt, 
+      h.tp, h.predTotal, h.fp, h.fn, h.precision, h.recall, h.f1, h.far
+    ];
+    
+    // Helper to wrap string fields in quotes to handle potential commas
+    const q = (str: any) => `"${String(str).replace(/"/g, '""')}"`;
+    // Percentage formatter
+    const p = (val: number) => `"${(val * 100).toFixed(2)}%"`;
+
     const rows = records.map(r => [
-        r.id, r.timestamp, r.model_name, r.confidence !== undefined ? r.confidence : 0,
-        r.scenario, r.gt_total, r.tp, r.fp, r.fn, 
-        r.precision.toFixed(4), r.recall.toFixed(4), r.f1_score.toFixed(4), r.far.toFixed(4)
+        r.id, 
+        q(r.timestamp), 
+        q(r.model_name), 
+        r.confidence !== undefined ? r.confidence : 0,
+        q(r.scenario), 
+        r.gt_total, 
+        r.tp, 
+        r.pred_total || (r.tp + r.fp), 
+        r.fp, 
+        r.fn, 
+        p(r.precision), 
+        p(r.recall), 
+        (r.f1_score * 100).toFixed(2), // F1 Score usually as index, matching table display
+        p(r.far)
     ]);
+
     const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([`\ufeff${csvContent}`], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel encoding support
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `visioquant_local_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute('download', `visioquant_${lang}_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -194,7 +217,7 @@ const App: React.FC = () => {
                 refreshHistory();
                 showToast(t.toastRestored);
             } else {
-                showToast(t.toastRestoreFailed); // Uses 'warning' style if logic implemented, or error text
+                showToast(t.toastRestoreFailed);
             }
         } catch (error) {
             console.error(error);
