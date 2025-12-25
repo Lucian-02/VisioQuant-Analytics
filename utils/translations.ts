@@ -1,5 +1,4 @@
 
-
 export type Language = 'en' | 'zh';
 
 export const translations = {
@@ -53,24 +52,19 @@ export const translations = {
     toastRestoreFailed: "Failed to restore. Invalid file format.",
     confirmDelete: "Are you sure you want to delete this record?",
     confirmClearAll: "WARNING: This will delete ALL local history records. This action cannot be undone. Are you sure?",
-    // Errors - keys must match calcService returns
     errNonNegative: "Inputs must be non-negative integers.",
     errTpGt: "CRITICAL: TP cannot exceed Ground Truth (GT). Check input integrity.",
-    warnTpFpGt: "Warning: TP + FP exceeds Total Objects. High False Positive scenario detected.",
-    // Data Assets View
     assetsTitle: "Local Data Assets",
     btnExportCsv: "Export CSV",
     btnBackup: "Backup DB",
     btnRestore: "Restore DB",
     btnClearAll: "Clear All Data",
     viewAll: "View All Records →",
-    // Modal
     modalCancel: "Cancel",
     modalConfirm: "Confirm",
     modalDeleteTitle: "Delete Record",
     modalClearTitle: "Clear All Data",
     welcome: "Welcome,",
-    // Radar
     radarTitle: "5-Dim Capability Analysis",
     radarPrecision: "Precision",
     radarRecall: "Recall",
@@ -79,17 +73,12 @@ export const translations = {
     radarEfficiency: "Efficiency",
     actionLoad: "Load",
     toastLoaded: "Record loaded into dashboard.",
-    // Auth
-    loginTitle: "Login to Account",
-    registerTitle: "Create Account",
-    password: "Password",
-    btnLogin: "Sign In",
-    btnRegister: "Sign Up",
-    linkRegister: "Don't have an account? Sign Up",
-    linkLogin: "Already have an account? Sign In",
-    toastWelcome: "Welcome back!",
-    toastRegistered: "Account created successfully.",
-    invalidCredentials: "Invalid email or password."
+    // Standard Modes
+    gtModeBasic: "Count Mode",
+    gtModeAdvanced: "Spatial Mode",
+    gtDimensionScale: "Spatial Breakdown",
+    autoSum: "Auto Sum",
+    distribution: "Distribution"
   },
   zh: {
     appTitle: "VisioQuant",
@@ -141,24 +130,19 @@ export const translations = {
     toastRestoreFailed: "恢复失败。文件格式无效。",
     confirmDelete: "确定要删除这条记录吗？",
     confirmClearAll: "警告：此操作将清空所有本地数据且无法恢复。确定继续吗？",
-    // Errors
     errNonNegative: "输入必须为非负整数。",
     errTpGt: "严重错误: TP 不能超过真实总数 (GT)。请检查数据完整性。",
-    warnTpFpGt: "警告: TP + FP 超过总目标数。检测到高误报场景。",
-    // Data Assets View
     assetsTitle: "本地数据资产管理",
     btnExportCsv: "导出 CSV",
     btnBackup: "备份数据库",
     btnRestore: "恢复数据库",
     btnClearAll: "清空所有数据",
     viewAll: "查看所有记录 →",
-    // Modal
     modalCancel: "取消",
     modalConfirm: "确认",
     modalDeleteTitle: "删除记录",
     modalClearTitle: "清空所有数据",
     welcome: "欢迎，",
-    // Radar
     radarTitle: "五维能力画像",
     radarPrecision: "精确度",
     radarRecall: "召回力",
@@ -167,16 +151,11 @@ export const translations = {
     radarEfficiency: "效能比",
     actionLoad: "加载",
     toastLoaded: "记录已加载至仪表盘。",
-    // Auth
-    loginTitle: "登录账户",
-    registerTitle: "创建账户",
-    password: "密码",
-    btnLogin: "登录",
-    btnRegister: "注册",
-    linkRegister: "没有账号？去注册",
-    linkLogin: "已有账号？去登录",
-    toastWelcome: "欢迎回来！",
-    toastRegistered: "账户创建成功。",
-    invalidCredentials: "邮箱或密码错误。"
+    // Standard Modes
+    gtModeBasic: "数量模式",
+    gtModeAdvanced: "空间模式",
+    gtDimensionScale: "空间尺度分布",
+    autoSum: "自动计算",
+    distribution: "数据分布"
   }
 };
