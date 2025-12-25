@@ -1,4 +1,3 @@
-
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
   <defs>
     <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -14,124 +13,72 @@
   <rect width="1200" height="800" fill="#020617" />
   
   <!-- Navbar -->
-  <rect width="1200" height="70" fill="#0f172a" stroke-bottom="#1e293b" />
+  <rect width="1200" height="70" fill="#0f172a" />
   <rect x="40" y="15" width="40" height="40" rx="8" fill="url(#grad1)" />
   <path d="M50 35 L55 30 M50 35 L55 40 M60 25 L65 30 L60 35 M55 35 L65 35" stroke="white" stroke-width="2" fill="none" />
   <text x="100" y="45" font-family="sans-serif" font-size="24" font-weight="bold" fill="white">VisioQuant</text>
-  <text x="250" y="45" font-family="sans-serif" font-size="14" fill="#64748b" letter-spacing="1" font-weight="bold" opacity="0.8">AI VISION ANALYTICS</text>
+  <text x="250" y="45" font-family="sans-serif" font-size="14" fill="#64748b" letter-spacing="1" font-weight="bold" opacity="0.8">AI PERFORMANCE ANALYTICS</text>
 
   <!-- Input Section (Left) -->
-  <rect x="40" y="100" width="340" height="420" rx="16" fill="#0f172a" stroke="#1e293b" />
-  <rect x="40" y="100" width="4" height="24" rx="2" fill="#6366f1" transform="translate(0, 15)"/>
-  <text x="60" y="140" font-family="sans-serif" font-size="16" fill="white" font-weight="bold">Input Parameters</text>
+  <rect x="40" y="100" width="340" height="580" rx="16" fill="#0f172a" stroke="#1e293b" />
+  <rect x="40" y="115" width="4" height="24" rx="2" fill="#6366f1" />
+  <text x="60" y="132" font-family="sans-serif" font-size="16" fill="white" font-weight="bold">Input Parameters</text>
   
-  <!-- Mock Inputs -->
-  <text x="60" y="175" font-family="sans-serif" font-size="12" fill="#64748b" font-weight="bold">MODEL NAME</text>
-  <rect x="60" y="185" width="300" height="40" rx="8" fill="#1e293b" stroke="#334155" />
-  <text x="75" y="210" font-family="monospace" font-size="12" fill="#e2e8f0">YOLOv8-Nano-v2</text>
+  <!-- AI TOTAL - Prominent Block -->
+  <rect x="60" y="160" width="300" height="100" rx="12" fill="#020617" stroke="#3b82f6" stroke-opacity="0.3" />
+  <text x="75" y="185" font-family="sans-serif" font-size="10" fill="#60a5fa" font-weight="bold">AI TOTAL (PRED_TOTAL)</text>
+  <text x="75" y="235" font-family="monospace" font-size="32" fill="white" font-weight="bold">1505</text>
+  <text x="280" y="235" text-anchor="end" font-family="monospace" font-size="12" fill="#f43f5e" font-weight="bold">FP: 85</text>
 
-  <text x="60" y="255" font-family="sans-serif" font-size="12" fill="#64748b" font-weight="bold">SCENARIO</text>
-  <rect x="60" y="265" width="300" height="40" rx="8" fill="#1e293b" stroke="#334155" />
-  <text x="75" y="290" font-family="monospace" font-size="12" fill="#e2e8f0">Night_Rain_03</text>
+  <!-- Other Inputs -->
+  <g transform="translate(60, 280)">
+      <text x="0" y="15" font-family="sans-serif" font-size="12" fill="#64748b" font-weight="bold">MODEL VERSION</text>
+      <rect x="0" y="25" width="300" height="40" rx="8" fill="#1e293b" stroke="#334155" />
+      <text x="15" y="50" font-family="monospace" font-size="12" fill="#e2e8f0">YOLOv8-Nano-v2</text>
 
-  <!-- GT/TP/FP Row -->
-  <g transform="translate(60, 335)">
-      <rect x="0" y="0" width="90" height="60" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.3"/>
-      <text x="45" y="20" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">GT</text>
-      <text x="45" y="45" text-anchor="middle" fill="#e2e8f0" font-size="18" font-family="monospace">1500</text>
+      <text x="0" y="95" font-family="sans-serif" font-size="12" fill="#64748b" font-weight="bold">GT (GROUND TRUTH)</text>
+      <rect x="0" y="105" width="300" height="40" rx="8" fill="#1e293b" stroke="#334155" />
+      <text x="15" y="130" font-family="monospace" font-size="16" fill="white">1420</text>
 
-      <rect x="105" y="0" width="90" height="60" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1" stroke-opacity="0.3"/>
-      <text x="150" y="20" text-anchor="middle" fill="#10b981" font-size="10" font-weight="bold">TP</text>
-      <text x="150" y="45" text-anchor="middle" fill="#e2e8f0" font-size="18" font-family="monospace">1420</text>
-
-      <rect x="210" y="0" width="90" height="60" rx="8" fill="#1e293b" stroke="#f43f5e" stroke-width="1" stroke-opacity="0.3"/>
-      <text x="255" y="20" text-anchor="middle" fill="#f43f5e" font-size="10" font-weight="bold">FP</text>
-      <text x="255" y="45" text-anchor="middle" fill="#e2e8f0" font-size="18" font-family="monospace">85</text>
+      <text x="0" y="175" font-family="sans-serif" font-size="12" fill="#10b981" font-weight="bold">TP (VALID HITS)</text>
+      <rect x="0" y="185" width="300" height="40" rx="8" fill="#1e293b" stroke="#10b981" stroke-opacity="0.3" />
+      <text x="15" y="210" font-family="monospace" font-size="16" fill="white">1420</text>
   </g>
   
-  <rect x="60" y="430" width="300" height="46" rx="10" fill="url(#grad1)" filter="url(#shadow)" />
-  <text x="210" y="458" text-anchor="middle" fill="white" font-weight="bold" font-family="sans-serif" font-size="14">SAVE RECORD</text>
+  <rect x="60" y="580" width="300" height="46" rx="10" fill="url(#grad1)" filter="url(#shadow)" />
+  <text x="210" y="608" text-anchor="middle" fill="white" font-weight="bold" font-family="sans-serif" font-size="14">SAVE EVALUATION</text>
 
   <!-- Metrics Grid (Right Top) -->
   <g transform="translate(400, 100)">
-    <!-- Precision -->
     <rect x="0" y="0" width="180" height="110" rx="16" fill="#0f172a" stroke="#3b82f6" stroke-opacity="0.2" />
-    <text x="20" y="30" fill="#60a5fa" font-size="11" font-family="sans-serif" font-weight="bold" letter-spacing="1">PRECISION</text>
-    <text x="20" y="75" fill="#e2e8f0" font-size="36" font-weight="bold" font-family="sans-serif">94.3%</text>
-    <text x="20" y="95" fill="#64748b" font-size="10">Anti-Interference</text>
+    <text x="20" y="30" fill="#60a5fa" font-size="11" font-weight="bold">PRECISION</text>
+    <text x="20" y="75" fill="#e2e8f0" font-size="36" font-weight="bold">94.3%</text>
     
-    <!-- Recall -->
     <rect x="200" y="0" width="180" height="110" rx="16" fill="#0f172a" stroke="#10b981" stroke-opacity="0.2" />
-    <text x="220" y="30" fill="#34d399" font-size="11" font-family="sans-serif" font-weight="bold" letter-spacing="1">RECALL</text>
-    <text x="220" y="75" fill="#e2e8f0" font-size="36" font-weight="bold" font-family="sans-serif">94.6%</text>
-    <text x="220" y="95" fill="#64748b" font-size="10">Coverage</text>
+    <text x="220" y="30" fill="#34d399" font-size="11" font-weight="bold">RECALL</text>
+    <text x="220" y="75" fill="#e2e8f0" font-size="36" font-weight="bold">94.6%</text>
     
-    <!-- F1 -->
     <rect x="400" y="0" width="180" height="110" rx="16" fill="#0f172a" stroke="#818cf8" stroke-opacity="0.2" />
-    <text x="420" y="30" fill="#a5b4fc" font-size="11" font-family="sans-serif" font-weight="bold" letter-spacing="1">F1-SCORE</text>
-    <text x="420" y="75" fill="#e2e8f0" font-size="36" font-weight="bold" font-family="sans-serif">94.5%</text>
-    <text x="420" y="95" fill="#64748b" font-size="10">Harmonic Mean</text>
+    <text x="420" y="30" fill="#a5b4fc" font-size="11" font-weight="bold">F1-SCORE</text>
+    <text x="420" y="75" fill="#e2e8f0" font-size="36" font-weight="bold">94.5%</text>
     
-    <!-- FAR -->
     <rect x="600" y="0" width="160" height="110" rx="16" fill="#0f172a" stroke="#f43f5e" stroke-opacity="0.2" />
-    <text x="620" y="30" fill="#fda4af" font-size="11" font-family="sans-serif" font-weight="bold" letter-spacing="1">FAR</text>
-    <text x="620" y="75" fill="#e2e8f0" font-size="36" font-weight="bold" font-family="sans-serif">5.6%</text>
-    <text x="620" y="95" fill="#64748b" font-size="10">False Alarm</text>
+    <text x="620" y="30" fill="#fda4af" font-size="11" font-weight="bold">FAR</text>
+    <text x="620" y="75" fill="#e2e8f0" font-size="36" font-weight="bold">5.6%</text>
   </g>
 
-  <!-- Radar Chart & Stats (Right Middle) -->
+  <!-- Radar Chart Area -->
   <g transform="translate(400, 230)">
-     <rect x="0" y="0" width="760" height="290" rx="16" fill="#0f172a" stroke="#1e293b" opacity="0.6"/>
-     <text x="20" y="30" fill="#e2e8f0" font-size="14" font-weight="bold">5-Dim Capability Analysis</text>
+     <rect x="0" y="0" width="760" height="450" rx="16" fill="#0f172a" stroke="#1e293b" opacity="0.6"/>
+     <text x="20" y="30" fill="#e2e8f0" font-size="14" font-weight="bold">Performance Visualization</text>
      
-     <g transform="translate(380, 160)">
-        <!-- Radar Grid -->
-        <circle cx="0" cy="0" r="100" stroke="#334155" fill="none" stroke-width="1"/>
-        <circle cx="0" cy="0" r="75" stroke="#334155" fill="none" stroke-width="1" stroke-dasharray="4 4"/>
-        <circle cx="0" cy="0" r="50" stroke="#334155" fill="none" stroke-width="1" stroke-dasharray="4 4"/>
-        <circle cx="0" cy="0" r="25" stroke="#334155" fill="none" stroke-width="1" stroke-dasharray="4 4"/>
-        
-        <!-- Axis Lines -->
-        <line x1="0" y1="-100" x2="0" y2="100" stroke="#334155" />
-        <line x1="-95" y1="-31" x2="95" y2="31" stroke="#334155" />
-        <line x1="-95" y1="31" x2="95" y2="-31" stroke="#334155" />
-
-        <!-- Data Polygon -->
-        <polygon points="0,-94 90,-29 88,29 0,95 -90,29 -88,-29" fill="#6366f1" fill-opacity="0.3" stroke="#818cf8" stroke-width="3"/>
-        <circle cx="0" cy="-94" r="4" fill="#818cf8"/>
-        <circle cx="90" cy="-29" r="4" fill="#818cf8"/>
-        <circle cx="88" cy="29" r="4" fill="#818cf8"/>
-        <circle cx="0" cy="95" r="4" fill="#818cf8"/>
-        <circle cx="-90" cy="29" r="4" fill="#818cf8"/>
-        <circle cx="-88" cy="-29" r="4" fill="#818cf8"/>
+     <g transform="translate(380, 240)">
+        <polygon points="0,-140 135,-45 132,45 0,145 -135,45 -132,-45" fill="#6366f1" fill-opacity="0.3" stroke="#818cf8" stroke-width="4"/>
+        <circle cx="0" cy="0" r="150" stroke="#334155" fill="none" stroke-width="1" stroke-dasharray="5 5"/>
+        <text x="0" y="-160" text-anchor="middle" fill="#94a3b8" font-size="12">Precision</text>
+        <text x="160" y="-45" text-anchor="start" fill="#94a3b8" font-size="12">Recall</text>
+        <text x="160" y="55" text-anchor="start" fill="#94a3b8" font-size="12">Anti-Noise</text>
+        <text x="0" y="170" text-anchor="middle" fill="#94a3b8" font-size="12">Efficiency</text>
      </g>
-  </g>
-
-  <!-- History Table (Bottom) -->
-  <g transform="translate(40, 540)">
-    <rect x="0" y="0" width="1120" height="230" rx="16" fill="#0f172a" stroke="#1e293b" />
-    <text x="30" y="40" fill="#e2e8f0" font-size="16" font-weight="bold" font-family="sans-serif">Recent Evaluation History</text>
-    <rect x="980" y="25" width="110" height="24" rx="12" fill="#1e293b" />
-    <text x="1035" y="42" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="bold">VIEW ALL</text>
-
-    <!-- Header -->
-    <rect x="30" y="65" width="1060" height="30" rx="6" fill="#1e293b" opacity="0.6"/>
-    <text x="50" y="85" fill="#64748b" font-size="10" font-weight="bold">TIMESTAMP</text>
-    <text x="250" y="85" fill="#64748b" font-size="10" font-weight="bold">MODEL VERSION</text>
-    <text x="800" y="85" fill="#64748b" font-size="10" font-weight="bold">F1 SCORE</text>
-    <text x="950" y="85" fill="#64748b" font-size="10" font-weight="bold">ACTION</text>
-
-    <!-- Row 1 -->
-    <line x1="30" y1="140" x2="1090" y2="140" stroke="#1e293b" />
-    <text x="50" y="120" fill="#94a3b8" font-size="12" font-family="monospace">2023-10-24 14:30</text>
-    <text x="250" y="120" fill="#e2e8f0" font-size="13" font-weight="bold">YOLOv8-Nano-v2</text>
-    <rect x="800" y="105" width="60" height="20" rx="4" fill="#6366f1" fill-opacity="0.1"/>
-    <text x="830" y="119" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="bold">94.5</text>
-    
-    <!-- Row 2 -->
-    <text x="50" y="170" fill="#94a3b8" font-size="12" font-family="monospace">2023-10-24 12:15</text>
-    <text x="250" y="170" fill="#e2e8f0" font-size="13" font-weight="bold">ResNet-50-Quant</text>
-    <rect x="800" y="155" width="60" height="20" rx="4" fill="#6366f1" fill-opacity="0.1"/>
-    <text x="830" y="169" text-anchor="middle" fill="#818cf8" font-size="12" font-weight="bold">91.2</text>
   </g>
 </svg>
