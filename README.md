@@ -1,65 +1,90 @@
-# VisioQuant Analytics 🧠📊
+<div align="center">
+  <img src="./screenshot.svg" alt="VisioQuant Banner" width="800">
+  
+  # VisioQuant Analytics
+  
+  **基于物理观测值的工业级 AI 视觉效能量化评估系统**
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![React: 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
+  [![Data Privacy](https://img.shields.io/badge/Data-100%25_Local-emerald?logo=lock&logoColor=white)](https://github.com/VisioQuant)
+  [![Bilingual](https://img.shields.io/badge/Lang-English%20%2F%20%E4%B8%AD%E6%96%87-indigo)](https://github.com/VisioQuant)
 
-**VisioQuant** 是一款面向 AI 计算机视觉工程师的工业级算法效能评估工具。该系统基于 **Core Logic Manifesto (核心逻辑宣言)** 构建，强调从模型预测总数 (Total Predictions) 出发，通过与真值 (Ground Truth) 的对撞，多维度量化模型在实际生产环境中的表现。
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Data Privacy](https://img.shields.io/badge/Data-100%25_Local-green.svg)
-![Language](https://img.shields.io/badge/Language-English%20%2F%20%E4%B8%AD%E6%96%87-indigo.svg)
-
-## 🖼️ 系统预览
-
-![VisioQuant Preview](./screenshot.svg)
-
----
-
-## 📐 核心量化逻辑 (Core Logic Manifesto)
-
-系统强制要求建立在以下三个物理观测值之上，杜绝模糊输入：
-
-1.  **AI 总数 (Pred Total)**: 模型在画面中产生的所有预测框总数。这是衡量模型“纯净度”与“冗余度”的关键基石。
-2.  **真值总数 (GT)**: 场景中实际存在的目标物理总数。
-3.  **有效命中 (TP)**: 经由 IOU 校验确认为正确的预测框数量。
-
-### 自动化指标推导：
--   **误报数 (FP)** = AI 总数 - 有效命中 (衡量“废话”多少)
--   **漏报数 (FN)** = 真值总数 - 有效命中 (衡量“遗漏”多少)
--   **精确率 (Precision)** = TP / AI 总数 (抗干扰能力)
--   **召回率 (Recall)** = TP / GT (目标覆盖能力)
--   **F1-Score**: 精确率与召回率的调和平均值。
+  <p align="center">
+    面向计算机视觉算法工程师，拒绝模糊指标，通过 <b>AI 预测总数</b> 与 <b>现实真值</b> 的直接对撞，<br/>
+    为生产环境构建最真实的模型能力画像。
+  </p>
+</div>
 
 ---
 
-## ✨ 核心特性
+## 📖 简介 (Overview)
 
--   **🚀 AI 总数优先布局**: UI 遵循“模型产出 -> 现实对撞”的思维顺序，突出 AI Count 在评估中的核心地位。
--   **📏 空间维度评估 (Spatial Mode)**: 支持按 COCO 标准（Small, Medium, Large）录入真值分布，自动聚合 GT 总数。
--   **📊 五维能力画像**: 实时生成雷达图，涵盖精确度、召回力、综合 F1、抗噪性及效能比五个维度。
--   **📈 性能演进追踪**: 自动绘制版本更迭趋势图，直观监测模型调优效果。
--   **🔒 隐私第一 (Local-first)**: 100% 本地化存储，数据永不出库，确保核心算法指标的绝对安全。
--   **📥 报表导出**: 支持中英双语切换，导出的 CSV 文件自动对齐表头，并将核心指标格式化为**百分比数值**。
+**VisioQuant** 是一套遵循 **Core Logic Manifesto (核心逻辑宣言)** 的评估工具。在实际工业生产中，仅仅关注 Recall 或 Precision 是不够的，VisioQuant 强制引入 **AI 总数 (Pred Total)** 作为评估的第一维度，用以精确衡量模型的“废话占比”与“背景抗干扰能力”。
 
----
+## 📐 核心量化逻辑 (The Evaluation Logic)
 
-## 🛠️ 技术实现
+系统严格基于以下三个物理观测值进行全量推导，杜绝算法评估中的黑盒逻辑：
 
--   **Frontend**: React 19, Tailwind CSS
--   **Visualization**: Recharts (Radar & Line charts)
--   **Storage**: Browser LocalStorage / IndexedDB (via Service Layer)
--   **Icons**: Lucide React
+- **Pred Total (AI 总数)**: 画面中模型产生的所有预测框/结果。
+- **Ground Truth (GT)**: 场景中实际存在的目标物理总数。
+- **True Positive (TP)**: 经过 IOU 校验确认为正确的有效命中。
 
----
-
-## 📖 使用说明
-
-1.  **基础信息**: 输入模型版本、置信度及测试场景。
-2.  **数值录入**: 
-    -   填入 **AI 总数** (Pred Total)。
-    -   选择数量模式或空间模式填入 **GT**。
-    -   填入 **TP** 命中数。
-3.  **保存与对比**: 点击保存，系统将记录快照。可在“数据资产”页面导出 CSV 报表进行线下汇报。
+### 自动化计算链路
+- **FP (误报)** = AI 总数 - 有效命中 → *衡量模型的冗余度*
+- **FN (漏报)** = 真值总数 - 有效命中 → *衡量模型的职责缺失*
+- **Precision (精确率)** = TP / AI 总数 → *衡量模型输出的纯净度*
+- **Recall (召回率)** = TP / GT → *衡量模型对目标的覆盖度*
 
 ---
 
-## 📄 许可证
+## ✨ 关键特性 (Features)
 
-本项目基于 MIT 许可证开源。
+- **⚡ 实时效能反馈**: 毫秒级计算响应，录入即刻生成五维雷达画像。
+- **📐 空间尺度分布**: 支持 COCO 标准下的 Small / Medium / Large 真值分级录入。
+- **📈 演进趋势追踪**: 自动绘制版本更迭曲线，直观呈现调优路径与性能拐点。
+- **📊 工业报表导出**: 支持中英双语切换，CSV 导出逻辑深度优化，核心指标自动转换为**百分比格式**。
+- **🛡️ 极致数据隐私**: 采用 Local-first 架构，数据完全存储在用户浏览器本地，无任何云端上传行为。
+- **🌓 响应式设计**: 完美适配桌面与移动端，支持现场测试数据快速采集。
+
+---
+
+## 🛠️ 技术栈 (Tech Stack)
+
+| 模块 | 技术选型 |
+| :--- | :--- |
+| **框架** | React 19 (ES6+ Module) |
+| **样式** | Tailwind CSS (Utility-first) |
+| **可视化** | Recharts (Radar & Time-series) |
+| **图标** | Lucide React |
+| **存储** | Browser LocalStorage / IndexedDB |
+
+---
+
+## 🚀 快速开始 (Getting Started)
+
+### 本地部署
+1. 克隆仓库:
+   ```bash
+   git clone https://github.com/your-username/visioquant.git
+   ```
+2. 使用静态服务器运行:
+   ```bash
+   npx serve .
+   ```
+
+### 核心操作流
+1. **Define**: 输入模型版本、置信度阈值及测试环境。
+2. **Evaluate**: 录入 `AI 总数`、`GT` 与 `TP`。
+3. **Analyze**: 观察雷达图中的“抗噪性”与“效能比”。
+4. **Archive**: 保存记录并导出 CSV 报表用于线下汇报。
+
+---
+
+## 📄 许可证 (License)
+
+根据 [MIT License](./LICENSE) 许可授权。
+
+<div align="center">
+  <sub>Built with ❤️ for the Computer Vision Community</sub>
+</div>
